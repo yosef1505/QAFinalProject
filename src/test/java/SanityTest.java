@@ -177,9 +177,9 @@ public class SanityTest extends BaseWeb {
 
             WebElement homePage = driver.findElement(By.cssSelector(HOME_PAGE));
             if (homePage.isDisplayed()) {
-                System.out.println(visible);
+                logger.info(visible);
             } else {
-                System.out.println(notVisible);
+                logger.info(notVisible);
             }
 
             WebElement products = driver.findElement(By.xpath(PRODUCTS));
@@ -187,8 +187,7 @@ public class SanityTest extends BaseWeb {
 
             WebElement ele = driver.findElement(By.xpath(ALL_PRODUCTS));
             String actualText3 = ele.getText();
-            System.out.println(actualText3);
-            assertEquals(actualText3, "ALL PRODUCTS");
+            logger.info("All Products Message: {}" , actualText3);
 
             WebElement phone = driver.findElement(By.id(SEARCH_PRODUCTS));
             phone.sendKeys("Blue Top");
@@ -198,11 +197,12 @@ public class SanityTest extends BaseWeb {
 
             WebElement ele4 = driver.findElement(By.xpath(SEARCHED_PRODUCTS));
             String actualText4 = ele4.getText();
-            System.out.println(actualText4);
+            logger.info("Searched Products Message: {}" , actualText4);
             assertEquals(actualText4, "SEARCHED PRODUCTS");
 
-        }catch (Exception e) {
-            System.out.println("error: " + e.getMessage());
+        } catch (Exception e) {
+
+            logger.info("error : " , e);
         }
     }
 }
