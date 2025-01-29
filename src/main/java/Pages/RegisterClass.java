@@ -1,5 +1,5 @@
 
-package org.example;
+package Pages;
 
 public class RegisterClass {
 
@@ -29,6 +29,7 @@ public class RegisterClass {
     final public static String LOGGED_IN = "#header > div > div > div > div.col-sm-8 > div > ul > li:nth-child(10) > a";
     final public static String DELETE_ACCOUNT = "//*[@id=\"header\"]/div/div/div/div[2]/div/ul/li[5]/a";
     final public static String ACCOUNT_DELETED = "//*[@id=\"form\"]/div/div/div/h2/b";
+    final public static String ENTER_ACCOUNT_INFORMATION = "#form > div > div > div > div.login-form > h2 > b";
 
 
 }

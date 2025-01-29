@@ -1,24 +1,37 @@
+package Tests;
+
+import Utils.BaseWeb;
 import com.github.javafaker.Faker;
 import org.apache.commons.io.FileUtils;
+import Pages.ExcelClass;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.Select;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import static org.example.RegisterClass.*;
-import static org.example.SearchClass.*;
+
+import static Pages.RegisterClass.*;
+import static Pages.SearchClass.*;
 import static org.testng.Assert.assertEquals;
 
 
 public class SanityTest extends BaseWeb {
     private static final Logger logger = LoggerFactory.getLogger(SanityTest.class);
 
-    WebDriver driver = init();
+    WebDriver driver;
+
+    @BeforeMethod
+    public void setup() throws IOException {
+        driver = init();
+    }
 
     Faker faker = new Faker();
     String randomName = faker.name().firstName();
@@ -70,7 +83,7 @@ public class SanityTest extends BaseWeb {
 
         WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
         signUpButton.click();
-        WebElement Message = driver.findElement(By.cssSelector("#form > div > div > div > div > h2 > b"));
+        WebElement Message = driver.findElement(By.cssSelector(ENTER_ACCOUNT_INFORMATION));
         String message = Message.getText();
         logger.info("Enter Account Information Message: {}", message);
         assertEquals(message, "ENTER ACCOUNT INFORMATION");
@@ -177,7 +190,6 @@ public class SanityTest extends BaseWeb {
             takeScreenshot("AccountDeleted");
 
 
-
         } catch (NoSuchElementException e) {
             logger.error("Element not found: {}", e.getMessage());
 
@@ -234,5 +246,42 @@ public class SanityTest extends BaseWeb {
 
             logger.info("error : ", e);
         }
+    }
+
+    @Test()
+    public void fillContentExcel() {
+
+
+
+        String path = "C:\\Users\\Yosef\\IdeaProjects\\QAFinalProject\\Sheet1.xlsx";
+        String sheet = "Sheet1";
+
+
+        List<String> names = ExcelClass.readExcelData(path, sheet, 0); // Column 0 for names
+        List<String> emails = ExcelClass.readExcelData(path, sheet, 1); // Column 1 for emails
+
+
+        String nameExcel = names.get(1);
+        String emailExcel = emails.get(2);
+
+        signUp();
+        WebElement element = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
+        String actualText = element.getText();
+        logger.info("New User SignUp Message: {} ", actualText);
+        assertEquals(actualText, "New User Signup!");
+
+        WebElement nameField = driver.findElement(By.xpath(NAME));
+        nameField.sendKeys(nameExcel); // Use data from Excel
+
+        WebElement emailField = driver.findElement(By.xpath(EMAIL));
+        emailField.sendKeys(emailExcel); // Use data from Excel
+
+        WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
+        signUpButton.click();
+        WebElement Message = driver.findElement(By.cssSelector(ENTER_ACCOUNT_INFORMATION));
+        String message = Message.getText();
+        logger.info("Enter Account Information Message: {}", message);
+        assertEquals(message, "ENTER ACCOUNT INFORMATION");
+        takeScreenshot("enter account info");
     }
 }
