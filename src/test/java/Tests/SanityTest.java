@@ -1,24 +1,59 @@
+package Tests;
+
+import Utils.BaseWeb;
 import com.github.javafaker.Faker;
+import org.apache.commons.io.FileUtils;
+import Pages.ExcelClass;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.Select;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import static org.example.RegisterClass.*;
-import static org.example.SearchClass.*;
+import static Pages.RegisterClass.*;
+import static Pages.SearchClass.*;
 import static org.testng.Assert.assertEquals;
 
 
 public class SanityTest extends BaseWeb {
     private static final Logger logger = LoggerFactory.getLogger(SanityTest.class);
 
-    WebDriver driver = init();
+    WebDriver driver;
+
+    @BeforeMethod
+    public void setup() throws IOException {
+        driver = init();
+    }
 
     Faker faker = new Faker();
     String randomName = faker.name().firstName();
     String randomEmail = faker.internet().emailAddress();
 
+
+    private void takeScreenshot(String screenshotName) {
+        try {
+            File directory = new File("screenshots");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
+
+            TakesScreenshot ts = (TakesScreenshot) driver;
+            File sourceFile = ts.getScreenshotAs(OutputType.FILE);
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String fileName = screenshotName + "_" + timestamp + ".png";
+            File destFile = new File(directory, fileName);
+            FileUtils.copyFile(sourceFile, destFile);
+            logger.info("Screenshot saved: {}", destFile.getAbsolutePath());
+        } catch (IOException e) {
+            logger.error("Failed to take screenshot: {}", e.getMessage());
+        }
+    }
 
 
     @Test()
@@ -35,7 +70,7 @@ public class SanityTest extends BaseWeb {
         signUp();
         WebElement element = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
         String actualText = element.getText();
-        logger.info("New User SignUp Message: {} " , actualText);
+        logger.info("New User SignUp Message: {} ", actualText);
         assertEquals(actualText, "New User Signup!");
 
         WebElement nameField = driver.findElement(By.xpath(NAME));
@@ -46,10 +81,11 @@ public class SanityTest extends BaseWeb {
 
         WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
         signUpButton.click();
-        WebElement Message = driver.findElement(By.cssSelector("#form > div > div > div > div > h2 > b"));
+        WebElement Message = driver.findElement(By.cssSelector(ENTER_ACCOUNT_INFORMATION));
         String message = Message.getText();
-        logger.info("Enter Account Information Message: {}" , message);
+        logger.info("Enter Account Information Message: {}", message);
         assertEquals(message, "ENTER ACCOUNT INFORMATION");
+        takeScreenshot("enter account info");
 
     }
 
@@ -126,8 +162,9 @@ public class SanityTest extends BaseWeb {
 
             WebElement e = driver.findElement(By.xpath(ACCOUNT_CREATED_MASSAGE));
             String actualText1 = e.getText();
-            logger.info("Account Created Message: {}",actualText1);
+            logger.info("Account Created Message: {}", actualText1);
             assertEquals(actualText1, "ACCOUNT CREATED!");
+            takeScreenshot("accountCreated ");
 
 
             WebElement continueButton = driver.findElement(By.xpath(CONTINUE));
@@ -148,26 +185,28 @@ public class SanityTest extends BaseWeb {
             String actualText3 = e2.getText();
             logger.info("Account Deleted Message: {}", actualText3);
             assertEquals(actualText3, "ACCOUNT DELETED!");
-
+            takeScreenshot("AccountDeleted");
 
 
         } catch (NoSuchElementException e) {
-            logger.error("Element not found: {}",  e.getMessage());
+            logger.error("Element not found: {}", e.getMessage());
 
         } catch (TimeoutException e) {
-            logger.error("Timeout occurred: {}",  e.getMessage());
+            logger.error("Timeout occurred: {}", e.getMessage());
 
         } catch (AssertionError e) {
             logger.error("Assertion failed: {}", e.getMessage());
 
         } catch (Exception e) {
             logger.error("An unexpected error occurred: {}", e.getMessage());
+            takeScreenshot("fillPrivateContact_error");
         }
+
     }
 
 
     @Test
-    public void SearchProduct(){
+    public void SearchProduct() {
 
         String visible = "Home page is visible successfully.";
         String notVisible = "Home page is not visible.";
@@ -187,7 +226,7 @@ public class SanityTest extends BaseWeb {
 
             WebElement ele = driver.findElement(By.xpath(ALL_PRODUCTS));
             String actualText3 = ele.getText();
-            logger.info("All Products Message: {}" , actualText3);
+            logger.info("All Products Message: {}", actualText3);
 
             WebElement phone = driver.findElement(By.id(SEARCH_PRODUCTS));
             phone.sendKeys("Blue Top");
@@ -197,12 +236,50 @@ public class SanityTest extends BaseWeb {
 
             WebElement ele4 = driver.findElement(By.xpath(SEARCHED_PRODUCTS));
             String actualText4 = ele4.getText();
-            logger.info("Searched Products Message: {}" , actualText4);
+            logger.info("Searched Products Message: {}", actualText4);
             assertEquals(actualText4, "SEARCHED PRODUCTS");
+            takeScreenshot("searchResults");
 
         } catch (Exception e) {
 
-            logger.info("error : " , e);
+            logger.info("error : ", e);
         }
+    }
+
+    @Test()
+    public void fillContentExcel() {
+
+
+
+        String path = "C:\\Users\\Yosef\\IdeaProjects\\QAFinalProject\\Sheet1.xlsx";
+        String sheet = "Sheet1";
+
+
+        List<String> names = ExcelClass.readExcelData(path, sheet, 0); // Column 0 for names
+        List<String> emails = ExcelClass.readExcelData(path, sheet, 1); // Column 1 for emails
+
+
+        String nameExcel = names.get(1);
+        String emailExcel = emails.get(2);
+
+        signUp();
+        WebElement element = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
+        String actualText = element.getText();
+        logger.info("New User SignUp Message: {} ", actualText);
+        assertEquals(actualText, "New User Signup!");
+
+        WebElement nameField = driver.findElement(By.xpath(NAME));
+        nameField.sendKeys(nameExcel); // Use data from Excel
+
+        WebElement emailField = driver.findElement(By.xpath(EMAIL));
+        emailField.sendKeys(emailExcel); // Use data from Excel
+
+        WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
+        signUpButton.click();
+        WebElement Message = driver.findElement(By.cssSelector(ENTER_ACCOUNT_INFORMATION));
+        String message = Message.getText();
+        logger.info("Enter Account Information Message: {}", message);
+        assertEquals(message, "ENTER ACCOUNT INFORMATION");
+        takeScreenshot("enter account info");
     }
 }
