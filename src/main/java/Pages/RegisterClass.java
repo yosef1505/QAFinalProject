@@ -30,6 +30,6 @@ public class RegisterClass {
     final public static String DELETE_ACCOUNT = "//*[@id=\"header\"]/div/div/div/div[2]/div/ul/li[5]/a";
     final public static String ACCOUNT_DELETED = "//*[@id=\"form\"]/div/div/div/h2/b";
     final public static String ENTER_ACCOUNT_INFORMATION = "#form > div > div > div > div.login-form > h2 > b";
-
+    final public static String ERROR_MESSAGE = "//*[@id=\"form\"]/div/div/div[3]/div/form/p";
 
 }

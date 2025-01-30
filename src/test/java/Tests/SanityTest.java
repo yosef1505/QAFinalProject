@@ -60,6 +60,11 @@ public class SanityTest extends BaseWeb {
     public void signUp() {
         WebElement signUP_Login = driver.findElement(By.xpath(SIGNUP_LOGIN_BUTTON));
         signUP_Login.click();
+        WebElement newUserText = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
+        assertEquals(newUserText.getText(), "New User Signup!");
+        logger.info("New User SignUp Message: {} ", newUserText.getText());
+        assertEquals(newUserText.getText(), "New User Signup!");
+
 
 
     }
@@ -68,10 +73,10 @@ public class SanityTest extends BaseWeb {
     public void fillContent() {
 
         signUp();
-        WebElement element = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
-        String actualText = element.getText();
-        logger.info("New User SignUp Message: {} ", actualText);
-        assertEquals(actualText, "New User Signup!");
+//        WebElement element = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
+//        String actualText = element.getText();
+//        logger.info("New User SignUp Message: {} ", actualText);
+//        assertEquals(actualText, "New User Signup!");
 
         WebElement nameField = driver.findElement(By.xpath(NAME));
         nameField.sendKeys(randomName);
@@ -282,4 +287,28 @@ public class SanityTest extends BaseWeb {
         assertEquals(message, "ENTER ACCOUNT INFORMATION");
         takeScreenshot("enter account info");
     }
+    @Test()
+    public void testRegisterWithExistingEmail() {
+        signUp();
+
+        // Enter name and already registered email address
+        WebElement nameField = driver.findElement(By.xpath(NAME));
+        nameField.sendKeys("nagham");
+
+        WebElement emailField = driver.findElement(By.xpath(EMAIL));
+        emailField.sendKeys("naghama@gmail.com");
+
+        // Click 'Signup' button
+        WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
+        signUpButton.click();
+
+        // Verify error 'Email Address already exist!' is visible
+        WebElement errorMessage = driver.findElement(By.xpath(ERROR_MESSAGE));
+        assertEquals(errorMessage.getText(), "Email Address already exist!");
+
+        takeScreenshot("email_exists_error");
+    }
+
+
+
 }
