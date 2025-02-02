@@ -5,7 +5,10 @@ import com.github.javafaker.Faker;
 import org.apache.commons.io.FileUtils;
 import Pages.ExcelClass;
 import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
@@ -13,12 +16,14 @@ import org.testng.annotations.Test;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import static Pages.RegisterClass.*;
 import static Pages.SearchClass.*;
 import static org.testng.Assert.assertEquals;
+import java.util.Random;
 
 
 public class SanityTest extends BaseWeb {
@@ -34,6 +39,7 @@ public class SanityTest extends BaseWeb {
     Faker faker = new Faker();
     String randomName = faker.name().firstName();
     String randomEmail = faker.internet().emailAddress();
+    Random random = new Random();
 
 
     private void takeScreenshot(String screenshotName) {
@@ -103,67 +109,51 @@ public class SanityTest extends BaseWeb {
             signUp();
             fillContent();
 
-            WebElement Message = driver.findElement(By.xpath(TITLE));
-            String message = Message.getText();
-            System.out.println(message);
-            assertEquals(message, "Title");
+            // Select random title (Mr. or Mrs.)
+            int genderChoice = random.nextInt(2) + 1; // 1 or 2
+            WebElement title = driver.findElement(By.xpath("//*[@id='id_gender"+genderChoice + "']"));
+            title.click();
 
-            WebElement titleMrs = driver.findElement(By.id(UNIFORM_ID_GENDER1));
-            titleMrs.click();
-
+            // Generate a random password
+            String randomPassword = faker.internet().password(8, 12);
             WebElement passwordField = driver.findElement(By.id(PASSWORD));
-            passwordField.sendKeys("yosef1122");
+            passwordField.sendKeys(randomPassword);
 
+            // Select a random birthday
             Select day = new Select(driver.findElement(By.id("days")));
-            day.selectByVisibleText("15");
+            day.selectByIndex(random.nextInt(27) + 1); // Days: 1-28 (avoiding Feb issues)
+
             Select month = new Select(driver.findElement(By.id("months")));
-            month.selectByVisibleText("May");
+            month.selectByIndex(random.nextInt(12) + 1); // Months: 1-12
+
             Select year = new Select(driver.findElement(By.id("years")));
-            year.selectByVisibleText("1999");
+            year.selectByVisibleText(String.valueOf(random.nextInt(40) + 1980)); // Years: 1980-2020
 
-            driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-            Thread.sleep(2000);
+            // Click Newsletter & Special Offers checkboxes
+            driver.findElement(By.id(NEWS_LETTER)).click();
+            driver.findElement(By.id(OPTION)).click();
 
-            WebElement newsletter = driver.findElement(By.id(NEWS_LETTER));
-            newsletter.click();
+            // Fill in name details
+            driver.findElement(By.id(FIRST_NAME)).sendKeys(faker.name().firstName());
+            driver.findElement(By.id(LAST_NAME)).sendKeys(faker.name().lastName());
 
-            WebElement options = driver.findElement(By.id(OPTION));
-            options.click();
+            //  Company & Address details
+            driver.findElement(By.id(COMPANY)).sendKeys(faker.company().name());
+            driver.findElement(By.id(ADDRESS)).sendKeys(faker.address().streetAddress());
+            driver.findElement(By.id(ADDRESS2)).sendKeys(faker.address().secondaryAddress());
 
-            WebElement firstNameField = driver.findElement(By.id(FIRST_NAME));
-            firstNameField.sendKeys("yosef");
-
-            WebElement lastNameField = driver.findElement(By.id(LAST_NAME));
-            lastNameField.sendKeys("abo qweder");
-
-            WebElement companyName = driver.findElement(By.id(COMPANY));
-            companyName.sendKeys("Qualitest");
-
-            WebElement addressName = driver.findElement(By.id(ADDRESS));
-            addressName.sendKeys("Negev11");
-
-            WebElement addressName2 = driver.findElement(By.id(ADDRESS2));
-            addressName2.sendKeys("BANK_HAPOALIM");
-
+            // Country selection
             Select country = new Select(driver.findElement(By.id(COUNTRY)));
             country.selectByVisibleText("Israel");
 
-            WebElement state = driver.findElement(By.id(STATE));
-            state.sendKeys("Asia");
-
-            WebElement city = driver.findElement(By.id(CITY));
-            city.sendKeys("Tel_Aviv");
-
-            WebElement zipCode = driver.findElement(By.id(ZIP_CODE));
-            zipCode.sendKeys("456846");
-
-            WebElement phone = driver.findElement(By.id(MOBILE_NUMBER));
-            phone.sendKeys("0524700002");
-            Thread.sleep(1000);
+            // State, City, Zip, and Phone
+            driver.findElement(By.id(STATE)).sendKeys(faker.address().state());
+            driver.findElement(By.id(CITY)).sendKeys(faker.address().city());
+            driver.findElement(By.id(ZIP_CODE)).sendKeys(faker.number().digits(6));
+            driver.findElement(By.id(MOBILE_NUMBER)).sendKeys(faker.phoneNumber().cellPhone());
 
             WebElement createAccount = driver.findElement(By.xpath(CREATE_ACCOUNT));
             createAccount.click();
-
 
             WebElement e = driver.findElement(By.xpath(ACCOUNT_CREATED_MASSAGE));
             String actualText1 = e.getText();
@@ -308,7 +298,87 @@ public class SanityTest extends BaseWeb {
 
         takeScreenshot("email_exists_error");
     }
+    @Test
+    public void PlaceOrderAfterLogin() {
+        signUp();
+        // וידוא שהמשתמש מחובר
+        driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[2]")).sendKeys("naghama@gmail.com");
+        driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[3]")).sendKeys("nagham123");
+        driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div[1]/form/button")).click();
 
+        //  Verify 'Logged in as username' is displayed at the top
+        WebElement loggedInMessage = driver.findElement(By.cssSelector(LOGGED_IN));
+        String expectedLoginText = "Logged in as " + "nagham";
+        assertEquals(loggedInMessage.getText(), expectedLoginText);
+        logger.info("Verified login: {}", expectedLoginText);
+        // חיפוש מוצר והוספה לעגלה
+        driver.findElement(By.xpath(PRODUCTS)).click();
+
+        driver.findElement(By.xpath("//a[contains(text(),'Add to cart')]")).click();
+
+        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        WebElement Btn_continueShopping = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#cartModal > div > div > div.modal-footer > button")));
+        Btn_continueShopping.click();
+
+        // מעבר לעגלה
+        driver.findElement(By.xpath("//*[@id=\"header\"]/div/div/div/div[2]/div/ul/li[3]/a")).click();
+        // בדיקה שהעגלה מוצגת
+        WebElement cartPage = driver.findElement(By.xpath("//*[@id=\"cart_items\"]/div/div[1]/ol/li[2]"));
+        assertEquals(cartPage.getText(), "Shopping Cart");
+        logger.info("Cart page is displayed successfully");
+//
+//         לחיצה על "Proceed to Checkout"
+        driver.findElement(By.xpath("//*[@id=\"do_action\"]/div[1]/div/div/a")).click();
+//        // בדיקת פרטי הכתובת וסיכום הזמנה
+        WebElement addressDetails = driver.findElement(By.xpath("//h2[contains(text(),'Address Details')]"));
+        WebElement orderReview = driver.findElement(By.xpath("//*[@id=\"cart_items\"]/div/div[4]/h2"));
+        assertEquals(addressDetails.getText(), "Address Details");
+        assertEquals(orderReview.getText(), "Review Your Order");
+        logger.info("Address and order details are displayed");
+
+        // הזנת הערות ולחיצה על "Place Order"
+        WebElement commentBox = driver.findElement(By.xpath("//textarea[@name='message']"));
+        commentBox.sendKeys("Please deliver ASAP!");
+        WebElement placeOrderButton = driver.findElement(By.xpath("//*[@id=\"cart_items\"]/div/div[7]/a"));
+        placeOrderButton.click();
+
+        // מילוי פרטי אשראי
+        WebElement nameOnCard = driver.findElement(By.name("name_on_card"));
+        nameOnCard.sendKeys(faker.name().fullName());
+        WebElement cardNumber = driver.findElement(By.name("card_number"));
+        cardNumber.sendKeys(faker.finance().creditCard().replaceAll("-", ""));
+        WebElement cvc = driver.findElement(By.name("cvc"));
+        cvc.sendKeys(String.valueOf(faker.number().numberBetween(100, 999)));
+
+    // בחירת חודש ושנה רנדומליים לתוקף הכרטיס
+        WebElement expiryMonth = driver.findElement(By.name("expiry_month"));
+        expiryMonth.sendKeys(String.valueOf(faker.number().numberBetween(1, 12)));
+
+        WebElement expiryYear = driver.findElement(By.name("expiry_year"));
+        expiryYear.sendKeys(String.valueOf(faker.number().numberBetween(2025, 2035))); // שנה אקראית בין 2025 ל-2035
+
+        // לחיצה על "Pay and Confirm Order"
+        WebElement payButton = driver.findElement(By.xpath("//*[@id=\"submit\"]"));
+        payButton.click();
+
+        // בדיקה שההזמנה בוצעה בהצלחה
+        WebElement successMessage = driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div/p"));
+        assertEquals(successMessage.getText(), "Your order has been placed successfully!");
+        logger.info("Order placed successfully");
+
+        // מחיקת החשבון
+        WebElement deleteAccount = driver.findElement(By.xpath(DELETE_ACCOUNT));
+        deleteAccount.click();
+
+        // וידוא שהחשבון נמחק
+        WebElement deletedMessage = driver.findElement(By.xpath(ACCOUNT_DELETED));
+        assertEquals(deletedMessage.getText(), "ACCOUNT DELETED!");
+        logger.info("Account deleted successfully");
+
+
+
+
+    }
 
 
 }
