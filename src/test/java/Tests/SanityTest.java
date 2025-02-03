@@ -366,6 +366,7 @@ public class SanityTest extends BaseWeb {
         assertEquals(successMessage.getText(), "Your order has been placed successfully!");
         logger.info("Order placed successfully");
 
+
         // מחיקת החשבון
         WebElement deleteAccount = driver.findElement(By.xpath(DELETE_ACCOUNT));
         deleteAccount.click();
