@@ -5,7 +5,6 @@ import com.github.javafaker.Faker;
 import org.apache.commons.io.FileUtils;
 import Pages.ExcelClass;
 import org.openqa.selenium.*;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -19,7 +18,6 @@ import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import static Pages.RegisterClass.*;
 import static Pages.SearchClass.*;
 import static org.testng.Assert.assertEquals;
@@ -30,11 +28,11 @@ public class SanityTest extends BaseWeb {
     private static final Logger logger = LoggerFactory.getLogger(SanityTest.class);
 
     WebDriver driver;
-
     @BeforeMethod
     public void setup() throws IOException {
         driver = init();
     }
+
 
     Faker faker = new Faker();
     String randomName = faker.name().firstName();
@@ -79,11 +77,6 @@ public class SanityTest extends BaseWeb {
     public void fillContent() {
 
         signUp();
-//        WebElement element = driver.findElement(By.cssSelector(NEW_USER_SIGNUP_TEXT));
-//        String actualText = element.getText();
-//        logger.info("New User SignUp Message: {} ", actualText);
-//        assertEquals(actualText, "New User Signup!");
-
         WebElement nameField = driver.findElement(By.xpath(NAME));
         nameField.sendKeys(randomName);
 
@@ -109,44 +102,44 @@ public class SanityTest extends BaseWeb {
             signUp();
             fillContent();
 
-            // Select random title (Mr. or Mrs.)
-            int genderChoice = random.nextInt(2) + 1; // 1 or 2
+
+            int genderChoice = random.nextInt(2) + 1;
             WebElement title = driver.findElement(By.xpath("//*[@id='id_gender"+genderChoice + "']"));
             title.click();
 
-            // Generate a random password
+
             String randomPassword = faker.internet().password(8, 12);
             WebElement passwordField = driver.findElement(By.id(PASSWORD));
             passwordField.sendKeys(randomPassword);
 
-            // Select a random birthday
+
             Select day = new Select(driver.findElement(By.id("days")));
-            day.selectByIndex(random.nextInt(27) + 1); // Days: 1-28 (avoiding Feb issues)
+            day.selectByIndex(random.nextInt(27) + 1);
 
             Select month = new Select(driver.findElement(By.id("months")));
-            month.selectByIndex(random.nextInt(12) + 1); // Months: 1-12
+            month.selectByIndex(random.nextInt(12) + 1);
 
             Select year = new Select(driver.findElement(By.id("years")));
-            year.selectByVisibleText(String.valueOf(random.nextInt(40) + 1980)); // Years: 1980-2020
+            year.selectByVisibleText(String.valueOf(random.nextInt(40) + 1980));
 
-            // Click Newsletter & Special Offers checkboxes
+
             driver.findElement(By.id(NEWS_LETTER)).click();
             driver.findElement(By.id(OPTION)).click();
 
-            // Fill in name details
+
             driver.findElement(By.id(FIRST_NAME)).sendKeys(faker.name().firstName());
             driver.findElement(By.id(LAST_NAME)).sendKeys(faker.name().lastName());
 
-            //  Company & Address details
+
             driver.findElement(By.id(COMPANY)).sendKeys(faker.company().name());
             driver.findElement(By.id(ADDRESS)).sendKeys(faker.address().streetAddress());
             driver.findElement(By.id(ADDRESS2)).sendKeys(faker.address().secondaryAddress());
 
-            // Country selection
+
             Select country = new Select(driver.findElement(By.id(COUNTRY)));
             country.selectByVisibleText("Israel");
 
-            // State, City, Zip, and Phone
+
             driver.findElement(By.id(STATE)).sendKeys(faker.address().state());
             driver.findElement(By.id(CITY)).sendKeys(faker.address().city());
             driver.findElement(By.id(ZIP_CODE)).sendKeys(faker.number().digits(6));
@@ -235,6 +228,8 @@ public class SanityTest extends BaseWeb {
             assertEquals(actualText4, "SEARCHED PRODUCTS");
             takeScreenshot("searchResults");
 
+
+
         } catch (Exception e) {
 
             logger.info("error : ", e);
@@ -250,8 +245,8 @@ public class SanityTest extends BaseWeb {
         String sheet = "Sheet1";
 
 
-        List<String> names = ExcelClass.readExcelData(path, sheet, 0); // Column 0 for names
-        List<String> emails = ExcelClass.readExcelData(path, sheet, 1); // Column 1 for emails
+        List<String> names = ExcelClass.readExcelData(path, sheet, 0);
+        List<String> emails = ExcelClass.readExcelData(path, sheet, 1);
 
 
         String nameExcel = names.get(1);
@@ -264,10 +259,10 @@ public class SanityTest extends BaseWeb {
         assertEquals(actualText, "New User Signup!");
 
         WebElement nameField = driver.findElement(By.xpath(NAME));
-        nameField.sendKeys(nameExcel); // Use data from Excel
+        nameField.sendKeys(nameExcel);
 
         WebElement emailField = driver.findElement(By.xpath(EMAIL));
-        emailField.sendKeys(emailExcel); // Use data from Excel
+        emailField.sendKeys(emailExcel);
 
         WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
         signUpButton.click();
@@ -281,18 +276,18 @@ public class SanityTest extends BaseWeb {
     public void testRegisterWithExistingEmail() {
         signUp();
 
-        // Enter name and already registered email address
+
         WebElement nameField = driver.findElement(By.xpath(NAME));
         nameField.sendKeys("nagham");
 
         WebElement emailField = driver.findElement(By.xpath(EMAIL));
         emailField.sendKeys("naghama@gmail.com");
 
-        // Click 'Signup' button
+
         WebElement signUpButton = driver.findElement(By.xpath(SIGNUP_BUTTON));
         signUpButton.click();
 
-        // Verify error 'Email Address already exist!' is visible
+
         WebElement errorMessage = driver.findElement(By.xpath(ERROR_MESSAGE));
         assertEquals(errorMessage.getText(), "Email Address already exist!");
 
@@ -306,43 +301,70 @@ public class SanityTest extends BaseWeb {
         driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div/form/input[3]")).sendKeys("nagham123");
         driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div[1]/div[1]/form/button")).click();
 
-        //  Verify 'Logged in as username' is displayed at the top
+
         WebElement loggedInMessage = driver.findElement(By.cssSelector(LOGGED_IN));
         String expectedLoginText = "Logged in as " + "nagham";
         assertEquals(loggedInMessage.getText(), expectedLoginText);
         logger.info("Verified login: {}", expectedLoginText);
-        // חיפוש מוצר והוספה לעגלה
+
+        //מחפש מוצר ומוסיף אותו לעגלה
         driver.findElement(By.xpath(PRODUCTS)).click();
 
-        driver.findElement(By.xpath("//a[contains(text(),'Add to cart')]")).click();
 
+        WebElement addToCartButton = driver.findElement(By.xpath("//a[contains(text(),'Add to cart')]"));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", addToCartButton);
+
+        //לוחץ על ADD TO CART שלוש פעמים
+        boolean isClicked = false;
+        for (int i = 0; i < 3; i++) {
+            try {
+                addToCartButton.click();
+                isClicked = true;
+                break;
+            } catch (ElementClickInterceptedException e) {
+
+                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", addToCartButton);
+                isClicked = true;
+                break;
+            } catch (Exception e) {
+                logger.error("Failed to click 'Add to cart' button: {}", e.getMessage());
+
+            }
+        }
+
+        if (!isClicked) {
+            throw new NoSuchElementException("Unable to click the 'Add to cart' button after multiple attempts.");
+        }
+
+        //עשר שניות עד שילחץ על הכפתור
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         WebElement Btn_continueShopping = wait.until(ExpectedConditions.elementToBeClickable(By.cssSelector("#cartModal > div > div > div.modal-footer > button")));
         Btn_continueShopping.click();
 
-        // מעבר לעגלה
+
         driver.findElement(By.xpath("//*[@id=\"header\"]/div/div/div/div[2]/div/ul/li[3]/a")).click();
-        // בדיקה שהעגלה מוצגת
+
         WebElement cartPage = driver.findElement(By.xpath("//*[@id=\"cart_items\"]/div/div[1]/ol/li[2]"));
         assertEquals(cartPage.getText(), "Shopping Cart");
         logger.info("Cart page is displayed successfully");
-//
-//         לחיצה על "Proceed to Checkout"
+
+
         driver.findElement(By.xpath("//*[@id=\"do_action\"]/div[1]/div/div/a")).click();
-//        // בדיקת פרטי הכתובת וסיכום הזמנה
+
+
         WebElement addressDetails = driver.findElement(By.xpath("//h2[contains(text(),'Address Details')]"));
         WebElement orderReview = driver.findElement(By.xpath("//*[@id=\"cart_items\"]/div/div[4]/h2"));
         assertEquals(addressDetails.getText(), "Address Details");
         assertEquals(orderReview.getText(), "Review Your Order");
         logger.info("Address and order details are displayed");
 
-        // הזנת הערות ולחיצה על "Place Order"
+
         WebElement commentBox = driver.findElement(By.xpath("//textarea[@name='message']"));
         commentBox.sendKeys("Please deliver ASAP!");
         WebElement placeOrderButton = driver.findElement(By.xpath("//*[@id=\"cart_items\"]/div/div[7]/a"));
         placeOrderButton.click();
 
-        // מילוי פרטי אשראי
+
         WebElement nameOnCard = driver.findElement(By.name("name_on_card"));
         nameOnCard.sendKeys(faker.name().fullName());
         WebElement cardNumber = driver.findElement(By.name("card_number"));
@@ -350,36 +372,32 @@ public class SanityTest extends BaseWeb {
         WebElement cvc = driver.findElement(By.name("cvc"));
         cvc.sendKeys(String.valueOf(faker.number().numberBetween(100, 999)));
 
-    // בחירת חודש ושנה רנדומליים לתוקף הכרטיס
+
         WebElement expiryMonth = driver.findElement(By.name("expiry_month"));
         expiryMonth.sendKeys(String.valueOf(faker.number().numberBetween(1, 12)));
 
         WebElement expiryYear = driver.findElement(By.name("expiry_year"));
-        expiryYear.sendKeys(String.valueOf(faker.number().numberBetween(2025, 2035))); // שנה אקראית בין 2025 ל-2035
+        expiryYear.sendKeys(String.valueOf(faker.number().numberBetween(2025, 2035)));
+        takeScreenshot("card information");
 
-        // לחיצה על "Pay and Confirm Order"
+
         WebElement payButton = driver.findElement(By.xpath("//*[@id=\"submit\"]"));
         payButton.click();
 
-        // בדיקה שההזמנה בוצעה בהצלחה
+
         WebElement successMessage = driver.findElement(By.xpath("//*[@id=\"form\"]/div/div/div/p"));
-        assertEquals(successMessage.getText(), "Your order has been placed successfully!");
+        assertEquals(successMessage.getText(), "Congratulations! Your order has been confirmed!");
         logger.info("Order placed successfully");
 
 
-        // מחיקת החשבון
         WebElement deleteAccount = driver.findElement(By.xpath(DELETE_ACCOUNT));
         deleteAccount.click();
 
-        // וידוא שהחשבון נמחק
+
         WebElement deletedMessage = driver.findElement(By.xpath(ACCOUNT_DELETED));
         assertEquals(deletedMessage.getText(), "ACCOUNT DELETED!");
         logger.info("Account deleted successfully");
-
-
-
-
+        takeScreenshot("account deleted");
     }
-
 
 }

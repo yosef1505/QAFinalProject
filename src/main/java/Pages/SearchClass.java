@@ -8,4 +8,5 @@ public class SearchClass {
     final public static String SEARCH_PRODUCTS = "search_product";
     final public static String SUBMIT_SEARCH = "submit_search";
     final public static String SEARCHED_PRODUCTS = "/html/body/section[2]/div[1]/div/div[2]/div/h2";
+
 }
